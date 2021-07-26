@@ -406,6 +406,7 @@ results <- bind_rows(results, data_frame(Method="Logistic Regression",
 results %>% knitr::kable()
 
 # Random Forest
+# 4 models crossing city_target_rating, city_development_index and company_size
 
 train_set_model %>% ggplot(aes(city_development_index, company_size, color = target)) +
    geom_point(alpha = 0.2)
@@ -432,9 +433,6 @@ results <- bind_rows(results, data_frame(Method="Random Forest: Company Size X C
 results %>% knitr::kable()
 
 
-
-# dt %>% ggplot(aes(city_target_rating, company_size, color = target)) +
-#   geom_point(alpha = 0.2)
 
 fit_rf2 <- train(target ~  city_target_rating +
                   company_size, "Rborist", data = train_set_model)
@@ -485,6 +483,7 @@ results <- bind_rows(results, data_frame(Method="Random Forest: City Target Rati
 results %>% knitr::kable()
 
 # EVALUATING THE MODEL
+# rf1 chosen
 
 y_hat_numeric <- predict(fit_rf1, newdata = test_set_final)
 
@@ -498,4 +497,46 @@ results_final <- data_frame(Method = "Random Forest: City Target Rating x Compan
                       Specificity = round(as.double(cm$byClass["Specificity"]),3),
                       F1 = round(as.double(cm$byClass["F1"]),3))
 
+results_final %>% knitr::kable()
+
+
+# ROC curve
+probs <- seq(0, 1, length.out = 10)
+guessing <- map_df(probs, function(p){
+  y_hat <- sample(c(1, 0), n, replace = TRUE, prob=c(p, 1-p))
+  y_hat <- factor(y_hat)
+  list(method = "Guessing target rate",
+       FPR = 1 - specificity(y_hat, factor(test_set_final$target)),
+       TPR = sensitivity(y_hat, factor(test_set_final$target)))
+})
+# guessing %>% qplot(FPR, TPR, data =., xlab = "1 - Specificity", ylab = "Sensitivity")
+
+cutoffs <- seq(0, 1, length.out = 20)
+y_cutoff <- map_df(cutoffs, function(x){
+  y_hat <- ifelse(y_hat_numeric > x, 1, 0)
+  y_hat <- factor(y_hat)
+  list(method = "Random Forest",
+       FPR = 1-specificity(y_hat, factor(test_set_final$target)),
+       TPR = sensitivity(y_hat, factor(test_set_final$target)))
+})
+
+# plot both curves together
+bind_rows(guessing, y_cutoff) %>%
+  ggplot(aes(FPR, TPR, color = method)) +
+  geom_line() +
+  geom_point() +
+  xlab("1 - Specificity") +
+  ylab("Sensitivity")
+
+# 0.4 cutoff proposed
+y_hat <- ifelse(y_hat_numeric > 0.4, 1, 0)
+
+cm <- confusionMatrix(data = factor(y_hat), reference = factor(test_set_final$target))
+
+results_final <- bind_rows(results_final, data_frame(Method= "Random Forest with a 0.4 cutoff", 
+                                         Accuracy = round(as.double(cm$overall["Accuracy"]),3),
+                                         Sensitivity = round(as.double(cm$byClass["Sensitivity"]),3),
+                                         Specificity = round(as.double(cm$byClass["Specificity"]),3),
+                                         F1 = round(as.double(cm$byClass["F1"]),3)))                           
+                           
 results_final %>% knitr::kable()

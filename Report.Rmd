@@ -80,6 +80,8 @@ In this section the methods applied to gain insight as well as the modeling deve
 
 The dataset is composed of 19158 entries and has 14 features. Its sumary has been shown in the *Dataset* section. The target is the feature this project wishes to predict and gain insight, it has a mean rate of about 25% and, in other words, it means that one fourth of the employees are looking for a new job.
 
+All information considered NA (not available) in this report are empty values in the dataset. It means that the employee hasn't filled the feature when asked.
+
 ```{r}
 dt %>% summarise("Target mean rate" = mean(target))  %>% knitr::kable()
 dt %>% ggplot(aes(target)) + geom_bar() +
@@ -101,10 +103,11 @@ dt %>% ggplot(aes(x= gender,  group=target)) +
                  y= ..prop.. ), stat= "count", vjust = -.5) +
   labs(y = "Percent", fill="Gender") +
   facet_grid(~target) +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = scales::percent) +
+  xlab("Gender")
 ```
 
-A similar behavior of higher NA values to target 1 is observed when comparing the company size and company type.
+A similar behavior of higher NA values to target 1 is observed when comparing the company size and company type. The company size is the 
 
 ```{r}
 # company_size X target
@@ -113,7 +116,7 @@ dt %>% ggplot(aes(x= company_size,  group=target)) +
   labs(y = "Percent", fill="company_size") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Company Size") +
+  xlab("Company Size (total employees)") +
   theme(axis.text.x = element_text(angle = 90))
 
 # company_type X target
@@ -136,22 +139,22 @@ dt %>% ggplot(aes(x= as.integer(training_hours/20),  group=target)) +
   labs(y = "Percent", fill="Training hours * 20") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Training hours / 20") 
+  xlab("Training hours divided by 20 (hours)") 
 ```
 
-Another insight that data exploration give us is that, while employees with no relevant experience wish to work with Data Science, the ones with more than 15 years of experience are looking for new horizons. The persona that stars to build is someone with no relevant experience in Data Science but with more than 15 years in the market.
+Another insight that data exploration give us is that, while employees with no relevant experience wish to work with Data Science, the ones with more than 14 years of experience are looking for new horizons. The persona that stars to build is someone with no relevant experience in Data Science but with more than 14 years in the market.
 
 ```{r}
 # relevent_experience X target
 dt %>%
   ggplot(aes(x= relevent_experience,  group=target)) + 
   geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count", show.legend = FALSE) +
-  geom_text(aes(label = scales::percent(..prop..),
-                y= ..prop.. ), stat= "count", vjust = -.5) +
+  # geom_text(aes(label = scales::percent(..prop..),
+  #               y= ..prop.. ), stat= "count", vjust = -.5) +
   labs(y = "Percent", fill="relevent_experience") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Relevant experience") +
+  xlab("Relevant experience in Data Science") +
   theme(axis.text.x = element_text(angle = 90))
 
 # experience X target
@@ -165,7 +168,7 @@ dt %>%
   xlab("Experience (years)") 
 ```
 
-There is no great change in the last new job feature regarding the target.
+There is no great change in the last_new_job feature regarding the target.
 
 ```{r}
 # last_new_job X target
@@ -174,10 +177,10 @@ dt %>%
   geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count", show.legend = FALSE) +
   # geom_text(aes(label = scales::percent(..prop..),
   #               y= ..prop.. ), stat= "count", vjust = -.5) +
-  labs(y = "Percent", fill="Last new job") +
+  labs(y = "Percent", fill="Years in last job") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Last new job") 
+  xlab("Years in last job") 
 ```
 
 Regarding education, the fact that an employee is a graduate and enrolled in a full time course seem to alter the tendency to look for a new job. It can also be said that the fact that an employee is not enrolled in any course will reduce its tendency to look for a new job. The major discipline doesn't seem to affect much the inclination to target 1.
@@ -204,7 +207,7 @@ dt %>%
   labs(y = "Percent", fill="enrolled_university") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Enrolled University")  +
+  xlab("Enrolled in university")  +
   theme(axis.text.x = element_text(angle = 90))
 
 # major_discipline X target
@@ -218,7 +221,7 @@ dt %>%
   theme(axis.text.x = element_text(angle = 90))
 ```
 
-Finally, when analysing the demographic aspect it is clear that cities with lower development index have a higher rate of employees looking for new jobs. The target rate is way bigger than the 25% rate of the whole dataset.
+Finally, when analysing the demographic aspect it is clear that cities with lower development index (DI) have a higher rate of employees looking for new jobs. The target rate is way bigger than the 25% rate of the whole dataset.
 
 ```{r}
 # city_development_index*10 X target
@@ -227,7 +230,7 @@ dt %>% ggplot(aes(x= as.integer(city_development_index*10),  group=target)) +
   labs(y = "Percent", fill="city_development_index hours * 10") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("City DI * 10") 
+  xlab("City development index times 10") 
 
 # city X target
 tab <- dt %>% 
@@ -318,7 +321,7 @@ dt %>%
   labs(y = "Percent", fill="company_size") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Company Size")  +
+  xlab("Company Size (total employees)")  +
   theme(axis.text.x = element_text(angle = 90))
 
 # last_new_job X target
@@ -330,7 +333,7 @@ dt %>%
   labs(y = "Percent", fill="Last new job") +
   facet_grid(~target) +
   scale_y_continuous(labels = scales::percent) +
-  xlab("Last new job") 
+  xlab("Years in last job") 
 ```
 
 ## Data Splitting
@@ -364,6 +367,8 @@ rm(test_index)
 
 In order to model the machine learning algorithm a table to evaluate and compare the techniques was created. It is composed of the method, accuracy, sensitivity, specificity and F1 score.
 
+All predicted values use a 0.5 cutoff. When the prediction is higher than 0.5 the target is changed to 1, otherwise it is changed to 0.
+
 ### Predicting the target rate
 
 As a starting point, the metrics of just guessing the target with the dataset mean rate was used. Bellow the results are shown.
@@ -392,7 +397,7 @@ results %>% knitr::kable()
 
 ### Linear Regression
 
-The first linear regression considers the company_size, company_type, education_level, relevent_experience, experience, enrolled_university and city_development_index features. When the predicted value was higher than 0.5 the target was changed to 1, otherwise it was changed to 0.
+The first linear regression considers the company_size, company_type, education_level, relevent_experience, experience, enrolled_university and city_development_index features.
 
 A second linear regression was made. This time including also the city mean target rate. Below are the results.
 
@@ -578,16 +583,71 @@ results_final <- data_frame(Method = "Random Forest: City Target Rating x Compan
 results_final %>% knitr::kable()
 ```
 
+Below the ROC curve is presented. It was gererated with different cutoffs.
+
+```{r}
+# ROC curve
+probs <- seq(0, 1, length.out = 10)
+guessing <- map_df(probs, function(p){
+  y_hat <- sample(c(1, 0), n, replace = TRUE, prob=c(p, 1-p))
+  y_hat <- factor(y_hat)
+  list(method = "Guessing target rate",
+       FPR = 1 - specificity(y_hat, factor(test_set_final$target)),
+       TPR = sensitivity(y_hat, factor(test_set_final$target)))
+})
+# guessing %>% qplot(FPR, TPR, data =., xlab = "1 - Specificity", ylab = "Sensitivity")
+
+cutoffs <- seq(0, 1, length.out = 20)
+y_cutoff <- map_df(cutoffs, function(x){
+  y_hat <- ifelse(y_hat_numeric > x, 1, 0)
+  y_hat <- factor(y_hat)
+  list(method = "Random Forest",
+       FPR = 1-specificity(y_hat, factor(test_set_final$target)),
+       TPR = sensitivity(y_hat, factor(test_set_final$target)))
+})
+
+# plot both curves together
+bind_rows(guessing, y_cutoff) %>%
+  ggplot(aes(FPR, TPR, color = method)) +
+  geom_line() +
+  geom_point() +
+  xlab("1 - Specificity") +
+  ylab("Sensitivity")
+```
+
+With the insight the ROC curve gives, it is reasonable to propose another cutoff in order to have a better specificity and move towards a point with greater projected area. A 0.4 cutoff is proposed and its result is compared to the previous modelling. The new modelling presents a much higher specificity whithout afecting much the F1 score. Both models can be used according to the desired sensitivity and specificity.
+
+```{r}
+y_hat <- ifelse(y_hat_numeric > 0.4, 1, 0)
+
+cm <- confusionMatrix(data = factor(y_hat), reference = factor(test_set_final$target))
+
+# results_final <- bind_rows(results_final, data_frame(Method= "Random Forest with a 0.4 cutoff", 
+#                                                      Accuracy = round(as.double(cm$overall["Accuracy"]),3),
+#                                                      Sensitivity = round(as.double(cm$byClass["Sensitivity"]),3),
+#                                                      Specificity = round(as.double(cm$byClass["Specificity"]),3),
+#                                                      F1 = round(as.double(cm$byClass["F1"]),3))
+
+results_final <- bind_rows(results_final, data_frame(Method= "Random Forest with a 0.4 cutoff", 
+                                         Accuracy = round(as.double(cm$overall["Accuracy"]),3),
+                                         Sensitivity = round(as.double(cm$byClass["Sensitivity"]),3),
+                                         Specificity = round(as.double(cm$byClass["Specificity"]),3),
+                                         F1 = round(as.double(cm$byClass["F1"]),3)))                           
+                           
+results_final %>% knitr::kable()
+```
+
 
 # Conclusion
 
 Using Data Science a better approach was built to predict, with the curent dataset, when an employee is looking for a new job. The machine learning modelling created outperformed greatly the random guess of 25%.
 
 Using the data presented, the persona built when thinking about one enrolle that has all the trends of someone looking for a new job in data science would be a person that
-* Live in a city with low DI
-* Is full time enrolled in a university in a graduation course
-* Have no relevant experience in Data Science
-* Have more than 13 years of experience
+
+* Lives in a city with low DI
+* Is full time enrolled in a university and in a graduation course
+* Has no relevant experience in Data Science
+* Has more than 14 years of experience
 * Doesn't state the company size or type
 
 A great limitation of the method chosen is that other features than the Company Size and City DI were not used. In data exploration it has been seen that whithout the NAs/NDs values the company size shouldn't be taken into accout. Another is that all enrollees were considered employees. In the end, the project is considering the fact that people that are looking for a new job are more concealing when given their information in polls.
